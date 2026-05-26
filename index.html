@@ -65,11 +65,11 @@
        imageTargetSrc: путь к вашему .mind файлу.
       -->
       <a-scene
-        mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.001; filterBeta: 0.001; missTolerance: 5"
-        color-space="sRGB"
-        renderer="colorManagement: true; physicallyCorrectLights: true"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
+        mindar-image="imageTargetSrc: targets.mind;
+        filterMinCF: 0.001;
+        filterBeta: 0.001;
+        missTolerance: 15;
+        warmupTolerance: 5"
       >
         <a-assets>
           <!-- IMG  -->
@@ -107,7 +107,7 @@
     <!-- СКРИПТЫ MindAR + A-Frame (загружать ПОСЛЕ разметки) -->
     
 
-    <script>
+    <!-- <script>
       // ── Определение устройства ──────────────────────────────────────────────
       const isMobile =
         /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
@@ -157,6 +157,102 @@
           if (!anyFound) scanHint.style.opacity = "1";
         });
       });
-    </script>
+    </script> -->
+
+    <script>
+      // ── Определение устройства ──────────────────────────────────────────────
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.platform));
+
+    const desktopScreen = document.getElementById('desktop-screen');
+    const arScreen      = document.getElementById('ar-screen');
+
+    if (isMobile) {
+      arScreen.style.display = 'block';
+
+      // Загружаем A-Frame и MindAR только на мобильных — динамически
+      function loadScript(src, onload) {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = onload;
+        document.head.appendChild(s);
+      }
+
+      loadScript('https://aframe.io/releases/1.5.0/aframe.min.js', () => {
+        loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js', () => {
+          // Создаём a-scene программно, только после загрузки скриптов
+          const sceneHTML = `
+            <a-scene
+              mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.001; filterBeta: 0.001; missTolerance: 15; warmupTolerance: 5"
+              color-space="sRGB"
+              renderer="colorManagement: true"
+              vr-mode-ui="enabled: false"
+              device-orientation-permission-ui="enabled: false"
+            >
+              <a-assets>
+                <img id="img0" src="content/marker0.gif">
+                <img id="img1" src="content/marker1.gif">
+                <img id="img2" src="content/marker2.gif">
+                <img id="img3" src="content/marker3.gif">
+              </a-assets>
+              <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+              <a-entity mindar-image-target="targetIndex: 0" id="target-0">
+                <a-image src="#img0" position="0 0 0" width="1" height="1"></a-image>
+              </a-entity>
+              <a-entity mindar-image-target="targetIndex: 1" id="target-1">
+                <a-image src="#img1" position="0 0 0" width="1" height="1"></a-image>
+              </a-entity>
+              <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+                <a-image src="#img2" position="0 0 0" width="1" height="1"></a-image>
+              </a-entity>
+              <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+                <a-image src="#img3" position="0 0 0" width="1" height="1"></a-image>
+              </a-entity>
+            </a-scene>`;
+          arScreen.insertAdjacentHTML('afterbegin', sceneHTML);
+          initUI();
+        });
+      });
+
+    } else {
+      desktopScreen.style.display = 'flex';
+    }
+
+    // ── UI инициализируется после загрузки сцены ───────────────────────────
+    function initUI() {
+    const modal         = document.getElementById('modal');
+    const scanHint      = document.getElementById('scan-hint');
+    const btnHelp       = document.getElementById('btn-help');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnReset      = document.getElementById('btn-reset');
+
+    btnHelp.addEventListener('click', () => modal.classList.add('open'));
+    btnCloseModal.addEventListener('click', () => modal.classList.remove('open'));
+
+    // Сброс — скрываем все таргеты и возвращаем хинт
+    btnReset.addEventListener('click', () => {
+      for (let i = 0; i < 4; i++) {
+        const t = document.getElementById('target-' + i);
+        if (t) t.setAttribute('visible', false);
+      }
+      scanHint.style.opacity = '1';
+    });
+
+    // Ждём пока A-Frame зарегистрирует элементы, потом вешаем события
+    setTimeout(() => {
+      document.querySelectorAll('[mindar-image-target]').forEach(el => {
+        el.addEventListener('targetFound', () => {
+          scanHint.style.opacity = '0';
+        });
+        el.addEventListener('targetLost', () => {
+          const anyFound = [...document.querySelectorAll('[mindar-image-target]')]
+            .some(e => e.getAttribute('visible') !== 'false');
+          if (!anyFound) scanHint.style.opacity = '1';
+        });
+      });
+    }, 2000);
+    } // конец initUI
+  </script>
+
   </body>
 </html>
