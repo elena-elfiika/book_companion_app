@@ -58,7 +58,6 @@
     }
 
     #desktop-screen .qr-hint {
-       display: flexbox;
         margin-top: 2rem;
         font-size: 0.85rem;
         opacity: 0.45;
