@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="style.css" />
 
 <script>
-  // Мобильных сразу перенаправляем на ar.html
+  // Перенаправляем на ar.html
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
     || (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.platform));
   if (isMobile) window.location.replace('ar.html');
@@ -21,12 +21,15 @@
 </head>
 
 <body>
-  <div class="icon">📱</div>
-  <h1>Приложение работает только на мобильных устройствах</h1>
-  <p>Откройте эту страницу на смартфоне <br/> и наведите камеру на метки в книге.</p>
-  <p class="hint">Используйте QR-код из книги для быстрого перехода</p>
-</body>
-
-</html>
+    <div id="desktop-screen">
+      <div class="icon">📱</div>
+      <h1>Приложение работает только на мобильных устройствах</h1>
+      <p>
+        Откройте эту страницу на смартфоне <br />
+        и наведите камеру на метки в книге.
+      </p>
+      <p class="qr-hint">Используйте QR-код из книги для быстрого перехода</p>
+    </div>
+  </body>
 
 </html>
