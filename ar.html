@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>«Практическое руководство по созданию линогравюры дома»</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400;600&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"/>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  </head>
+  <body>
+    <!-- TOP BAR -->
+    <!-- SCAN HINT -->
+    <div id="scan-hint">
+      <div class="frame">
+        <span class="corner-br"></span>
+        <span class="corner-bl"></span>
+      </div>
+      <p>Наведите камеру на метку в книге</p>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div id="bottom-bar">
+      <button id="btn-reset">Прочитать новую метку</button>
+      <button id="btn-help">Инструкция</button>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal">
+      <div id="modal-box">
+        <h2>Как пользоваться</h2>
+        <ol>
+          <li>Откройте книгу на странице с меткой AR</li>
+          <li>Наведите камеру так, чтобы метка попала в кадр</li>
+          <li>Дождитесь появления дополнительного контента</li>
+          <li>Чтобы отсканировать другую метку — нажмите кнопку внизу</li>
+        </ol>
+        <button id="btn-close-modal">Понятно</button>
+      </div>
+    </div>
+
+    <!-- A-FRAME + MindAR -->
+    <a-scene
+      mindar-image="imageTargetSrc: targets.mind;
+      filterMinCF: 0.001; 
+      filterBeta: 0.001; 
+      missTolerance: 20;
+      warmupTolerance: 5"
+      color-space="sRGB"
+      renderer="colorManagement: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <!-- Замените на реальные пути к вашему контенту -->
+        <img id="img0" src="content/Metki-1.png" />
+        <img id="img1" src="content/Metki-2.png" />
+        <img id="img2" src="content/Metki-3.png" />
+        <img id="img3" src="content/Metki_anim.gif" />
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0" id="target-0">
+        <a-image src="#img0" position="0 0 0" width="1" height="1"></a-image>
+      </a-entity>
+      <a-entity mindar-image-target="targetIndex: 1" id="target-1">
+        <a-image src="#img1" position="0 0 0" width="1" height="1"></a-image>
+      </a-entity>
+      <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+        <a-image src="#img2" position="0 0 0" width="1" height="1"></a-image>
+      </a-entity>
+      <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+        <a-image src="#img3" position="0 0 0" width="1" height="1"></a-image>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      const modal = document.getElementById("modal");
+      const scanHint = document.getElementById("scan-hint");
+
+      document
+        .getElementById("btn-help")
+        .addEventListener("click", () => modal.classList.add("open"));
+      document
+        .getElementById("btn-close-modal")
+        .addEventListener("click", () => modal.classList.remove("open"));
+
+      document.getElementById("btn-reset").addEventListener("click", () => {
+        for (let i = 0; i < 4; i++) {
+          const t = document.getElementById("target-" + i);
+          if (t) t.setAttribute("visible", false);
+        }
+        scanHint.style.opacity = "1";
+      });
+
+      // События MindAR вешаем после инициализации сцены
+      const scene = document.querySelector("a-scene");
+      scene.addEventListener("loaded", () => {
+        document.querySelectorAll("[mindar-image-target]").forEach((el) => {
+          el.addEventListener("targetFound", () => {
+            scanHint.style.opacity = "0";
+          });
+          el.addEventListener("targetLost", () => {
+            const anyVisible = [
+              ...document.querySelectorAll("[mindar-image-target]"),
+            ].some((e) => e.getAttribute("visible") !== "false");
+            if (!anyVisible) scanHint.style.opacity = "1";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
