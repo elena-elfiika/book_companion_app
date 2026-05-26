@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR — Линогравюра</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400;600&family=PT+Sans:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="style" src="/style/style.css" />
+  </head>
+  
+  <body>
+    <!-- DESKTOP ЗАГЛУШКА -->
+    <div id="desktop-screen">
+      <div class="icon">📱</div>
+      <h1>Приложение работает только на мобильных устройствах</h1>
+      <p>
+        Откройте эту страницу на смартфоне и наведите камеру на метки в книге.
+      </p>
+      <p class="qr-hint">Используйте QR-код из книги для быстрого перехода</p>
+    </div>
+
+    <!-- AR ЭКРАН -->
+    <div id="ar-screen">
+      <!-- TOP BAR -->
+      <div id="top-bar">
+        <span class="app-title">Линогравюра · AR</span>
+        <button id="btn-help">Инструкция</button>
+      </div>
+
+      <!-- SCAN HINT (прячется при распознавании) -->
+      <div id="scan-hint">
+        <div class="frame">
+          <span class="corner-br"></span>
+          <span class="corner-bl"></span>
+        </div>
+        <p>Наведите камеру на метку в книге</p>
+      </div>
+
+      <!-- BOTTOM BAR -->
+      <div id="bottom-bar">
+        <button id="btn-reset">Прочитать новую метку</button>
+      </div>
+
+      <!-- ИНСТРУКЦИЯ (модальное окно) -->
+      <div id="modal">
+        <div id="modal-box">
+          <h2>Как пользоваться</h2>
+          <ol>
+            <li>Откройте книгу на странице с меткой AR</li>
+            <li>Наведите камеру так, чтобы метка попала в кадр</li>
+            <li>Дождитесь появления дополнительного контента</li>
+            <li>Чтобы отсканировать другую метку — нажмите кнопку внизу</li>
+          </ol>
+          <button id="btn-close-modal">Понятно</button>
+        </div>
+      </div>
+
+      <!-- A-FRAME + MindAR СЦЕНА -->
+      <!-- filterMinCF / filterBeta — параметры стабилизации.
+       imageTargetSrc: путь к вашему .mind файлу.
+      -->
+      <a-scene
+        mindar-image="imageTargetSrc: targets.mind; filterMinCF: 0.001; filterBeta: 0.001; missTolerance: 5"
+        color-space="sRGB"
+        renderer="colorManagement: true; physicallyCorrectLights: true"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+      >
+        <a-assets>
+          <!-- IMG  -->
+          <img id="img0" src="content/Metki-1.pngf" />
+          <img id="img1" src="content/Metki-2.png" />
+          <img id="img2" src="content/Metki-3.png" />
+          <img id="img3" src="content/Metki-4.png" />
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- МЕТКА 0 -->
+        <a-entity mindar-image-target="targetIndex: 0" id="target-0">
+          <a-image src="#img0" position="0 0 0" width="1" height="1"></a-image>
+        </a-entity>
+
+        <!-- МЕТКА 1 -->
+        <a-entity mindar-image-target="targetIndex: 1" id="target-1">
+          <a-image src="#img1" position="0 0 0" width="1" height="1"></a-image>
+        </a-entity>
+
+        <!-- МЕТКА 2 -->
+        <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+          <a-image src="#img2" position="0 0 0" width="1" height="1"></a-image>
+        </a-entity>
+
+        <!-- МЕТКА 3 -->
+        <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+          <a-image src="#img3" position="0 0 0" width="1" height="1"></a-image>
+        </a-entity>
+      </a-scene>
+    </div>
+    <!-- /ar-screen -->
+
+    <!-- СКРИПТЫ MindAR + A-Frame (загружать ПОСЛЕ разметки) -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <script>
+      // ── Определение устройства ──────────────────────────────────────────────
+      const isMobile =
+        /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.platform));
+
+      const desktopScreen = document.getElementById("desktop-screen");
+      const arScreen = document.getElementById("ar-screen");
+
+      if (isMobile) {
+        arScreen.style.display = "block";
+      } else {
+        desktopScreen.style.display = "flex";
+      }
+
+      // ── Кнопки UI ──────────────────────────────────────────────────────────
+      const modal = document.getElementById("modal");
+      const scanHint = document.getElementById("scan-hint");
+      const btnHelp = document.getElementById("btn-help");
+      const btnCloseModal = document.getElementById("btn-close-modal");
+      const btnReset = document.getElementById("btn-reset");
+
+      btnHelp.addEventListener("click", () => modal.classList.add("open"));
+      btnCloseModal.addEventListener("click", () =>
+        modal.classList.remove("open"),
+      );
+
+      // Сброс — скрываем все таргеты и возвращаем хинт
+      btnReset.addEventListener("click", () => {
+        for (let i = 0; i < 4; i++) {
+          const t = document.getElementById("target-" + i);
+          if (t) t.setAttribute("visible", false);
+        }
+        scanHint.style.opacity = "1";
+      });
+
+      // ── Прячем хинт при распознавании ─────────────────────────────────────
+      // MindAR генерирует события targetFound / targetLost на a-entity
+      document.querySelectorAll("[mindar-image-target]").forEach((el) => {
+        el.addEventListener("targetFound", () => {
+          scanHint.style.opacity = "0";
+        });
+        el.addEventListener("targetLost", () => {
+          // Показываем хинт только если ни одна метка не отслеживается
+          const anyFound = [
+            ...document.querySelectorAll("[mindar-image-target]"),
+          ].some((e) => e.getAttribute("visible") !== "false");
+          if (!anyFound) scanHint.style.opacity = "1";
+        });
+      });
+    </script>
+  </body>
+</html>
